@@ -3,21 +3,33 @@ package com.example.twitchtest.presentation.mainstream
 import android.app.Activity
 import android.view.WindowManager
 import com.pedro.library.view.OpenGlView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraFront
 import androidx.compose.material.icons.filled.CameraRear
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.PlayArrow
@@ -28,7 +40,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -112,73 +123,95 @@ fun MainStreamScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { innerPadding ->
-        Box(
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        AndroidView(
+            factory = { previewContext ->
+                OpenGlView(previewContext).also { openGlView ->
+                    streamManager.initialize(openGlView)
+                    var surfaceCreatedOnce = false
+                    openGlView.holder.addCallback(object : android.view.SurfaceHolder.Callback {
+                        override fun surfaceCreated(holder: android.view.SurfaceHolder) {
+                            if (!surfaceCreatedOnce) {
+                                // First creation — just start preview
+                                surfaceCreatedOnce = true
+                                streamManager.startPreview()
+                            } else {
+                                // Surface was destroyed and recreated (e.g. back from background)
+                                // Re-create camera with fresh OpenGL context and resume stream if needed
+                                streamManager.onSurfaceRecreated(openGlView)
+                            }
+                        }
+
+                        override fun surfaceChanged(
+                            holder: android.view.SurfaceHolder,
+                            format: Int,
+                            width: Int,
+                            height: Int
+                        ) = Unit
+
+                        override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
+                            streamManager.stopPreview()
+                        }
+                    })
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        StatusInfoPanel(
+            status = state.streamStatus,
+            duration = state.duration,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+                .align(Alignment.TopCenter)
+                .padding(top = statusBarPadding + 12.dp)
+        )
+
+        AnimatedVisibility(
+            visible = state.streamStatus == StreamStatus.ONLINE,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = statusBarPadding + 8.dp, end = 16.dp),
+            enter = scaleIn(tween(300)) + fadeIn(tween(300)),
+            exit = scaleOut(tween(300)) + fadeOut(tween(300))
         ) {
-            AndroidView(
-                factory = { previewContext ->
-                    OpenGlView(previewContext).also { openGlView ->
-                        streamManager.initialize(openGlView)
-                        var surfaceCreatedOnce = false
-                        openGlView.holder.addCallback(object : android.view.SurfaceHolder.Callback {
-                            override fun surfaceCreated(holder: android.view.SurfaceHolder) {
-                                if (!surfaceCreatedOnce) {
-                                    // First creation — just start preview
-                                    surfaceCreatedOnce = true
-                                    streamManager.startPreview()
-                                } else {
-                                    // Surface was destroyed and recreated (e.g. back from background)
-                                    // Re-create camera with fresh OpenGL context and resume stream if needed
-                                    streamManager.onSurfaceRecreated(openGlView)
-                                }
-                            }
-
-                            override fun surfaceChanged(
-                                holder: android.view.SurfaceHolder,
-                                format: Int,
-                                width: Int,
-                                height: Int
-                            ) = Unit
-
-                            override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
-                                streamManager.stopPreview()
-                            }
-                        })
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-
-            StatusInfoPanel(
-                status = state.streamStatus,
-                duration = state.duration,
+            IconButton(
                 onClick = { viewModel.onIntent(MainStreamIntent.OpenViewerSheet) },
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 48.dp)
-            )
-
-            ControlBar(
-                streamStatus = state.streamStatus,
-                isMuted = state.isMuted,
-                isFrontCamera = state.isFrontCamera,
-                onIntent = viewModel::onIntent,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 48.dp)
-            )
-
-            if (showViewerSheet) {
-                ViewerListSheet(
-                    onDismiss = { viewModel.onIntent(MainStreamIntent.CloseViewerSheet) }
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Groups,
+                    contentDescription = "Viewers"
                 )
             }
         }
+
+        ControlBar(
+            streamStatus = state.streamStatus,
+            isMuted = state.isMuted,
+            isFrontCamera = state.isFrontCamera,
+            onIntent = viewModel::onIntent,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = navBarPadding + 16.dp)
+        )
+
+        if (showViewerSheet) {
+            ViewerListSheet(
+                onDismiss = { viewModel.onIntent(MainStreamIntent.CloseViewerSheet) }
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -186,11 +219,10 @@ fun MainStreamScreen(
 private fun StatusInfoPanel(
     status: StreamStatus,
     duration: Long,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
@@ -231,6 +263,13 @@ private fun ControlBar(
     onIntent: (MainStreamIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isLive = streamStatus == StreamStatus.ONLINE || streamStatus == StreamStatus.CONNECTING
+    val fabColor by animateColorAsState(
+        targetValue = if (isLive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        animationSpec = tween(300),
+        label = "fabColor"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -244,38 +283,38 @@ private fun ControlBar(
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
-            Icon(
-                imageVector = if (isMuted) Icons.Filled.MicOff else Icons.Filled.Mic,
-                contentDescription = if (isMuted) "Unmute microphone" else "Mute microphone"
-            )
+            Crossfade(
+                targetState = isMuted,
+                animationSpec = tween(200),
+                label = "mic"
+            ) { muted ->
+                Icon(
+                    imageVector = if (muted) Icons.Filled.MicOff else Icons.Filled.Mic,
+                    contentDescription = if (muted) "Unmute microphone" else "Mute microphone"
+                )
+            }
         }
 
         FloatingActionButton(
             onClick = {
-                if (streamStatus == StreamStatus.ONLINE || streamStatus == StreamStatus.CONNECTING) {
+                if (isLive) {
                     onIntent(MainStreamIntent.StopStream)
                 } else {
                     onIntent(MainStreamIntent.StartStream)
                 }
             },
-            containerColor = if (streamStatus == StreamStatus.ONLINE || streamStatus == StreamStatus.CONNECTING) {
-                MaterialTheme.colorScheme.error
-            } else {
-                MaterialTheme.colorScheme.primary
-            }
+            containerColor = fabColor
         ) {
-            Icon(
-                imageVector = if (streamStatus == StreamStatus.ONLINE || streamStatus == StreamStatus.CONNECTING) {
-                    Icons.Filled.Stop
-                } else {
-                    Icons.Filled.PlayArrow
-                },
-                contentDescription = if (streamStatus == StreamStatus.ONLINE || streamStatus == StreamStatus.CONNECTING) {
-                    "Stop stream"
-                } else {
-                    "Start stream"
-                }
-            )
+            Crossfade(
+                targetState = isLive,
+                animationSpec = tween(200),
+                label = "stream"
+            ) { live ->
+                Icon(
+                    imageVector = if (live) Icons.Filled.Stop else Icons.Filled.PlayArrow,
+                    contentDescription = if (live) "Stop stream" else "Start stream"
+                )
+            }
         }
 
         IconButton(
@@ -284,10 +323,16 @@ private fun ControlBar(
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         ) {
-            Icon(
-                imageVector = if (isFrontCamera) Icons.Filled.CameraRear else Icons.Filled.CameraFront,
-                contentDescription = if (isFrontCamera) "Switch to back camera" else "Switch to front camera"
-            )
+            Crossfade(
+                targetState = isFrontCamera,
+                animationSpec = tween(200),
+                label = "camera"
+            ) { front ->
+                Icon(
+                    imageVector = if (front) Icons.Filled.CameraRear else Icons.Filled.CameraFront,
+                    contentDescription = if (front) "Switch to back camera" else "Switch to front camera"
+                )
+            }
         }
     }
 }
