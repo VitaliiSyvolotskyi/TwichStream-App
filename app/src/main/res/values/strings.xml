@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">TwitchTest</string>
+
+    <!-- Stream Config Screen -->
+    <string name="stream_config_title">Stream Configuration</string>
+    <string name="stream_config_description">Enter your Twitch stream key to start streaming.</string>
+    <string name="stream_key_label">Stream Key</string>
+    <string name="save_key">Save Key</string>
+    <string name="start_streaming">Start Streaming</string>
+
+    <!-- Main Stream Screen -->
+    <string name="permissions_required">Camera and Microphone permissions are required for streaming.</string>
+    <string name="end_stream_dialog_title">End Stream?</string>
+    <string name="end_stream_dialog_message">You are currently streaming. Going back will stop the stream.</string>
+    <string name="end_stream">End Stream</string>
+    <string name="cancel">Cancel</string>
+    <string name="viewers">Viewers</string>
+    <string name="unmute_microphone">Unmute microphone</string>
+    <string name="mute_microphone">Mute microphone</string>
+    <string name="stop_stream">Stop stream</string>
+    <string name="start_stream">Start stream</string>
+    <string name="switch_to_back_camera">Switch to back camera</string>
+    <string name="switch_to_front_camera">Switch to front camera</string>
 </resources>

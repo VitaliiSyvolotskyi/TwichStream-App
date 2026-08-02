@@ -3,6 +3,7 @@ package com.example.twitchtest.presentation.mainstream
 import android.app.Activity
 import android.view.WindowManager
 import com.pedro.library.view.OpenGlView
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -43,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -55,16 +58,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.twitchtest.R
 import com.example.twitchtest.domain.model.StreamStatus
 import com.example.twitchtest.presentation.common.RequestStreamingPermissions
 import com.example.twitchtest.presentation.viewerlist.ViewerListSheet
 
 @Composable
 fun MainStreamScreen(
+    onNavigateBack: () -> Unit = {},
     viewModel: MainStreamViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -75,6 +81,14 @@ fun MainStreamScreen(
     var permissionsGranted by remember { mutableStateOf(false) }
     var permissionsDenied by remember { mutableStateOf(false) }
     var showViewerSheet by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    val isStreaming =
+        state.streamStatus == StreamStatus.ONLINE || state.streamStatus == StreamStatus.CONNECTING
+
+    BackHandler(enabled = isStreaming) {
+        showExitDialog = true
+    }
 
     if (!permissionsGranted && !permissionsDenied) {
         RequestStreamingPermissions(
@@ -89,7 +103,7 @@ fun MainStreamScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Camera and Microphone permissions are required for streaming.",
+                text = stringResource(R.string.permissions_required),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(24.dp)
             )
@@ -121,6 +135,28 @@ fun MainStreamScreen(
         } else {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text(stringResource(R.string.end_stream_dialog_title)) },
+            text = { Text(stringResource(R.string.end_stream_dialog_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExitDialog = false
+                    viewModel.onIntent(MainStreamIntent.StopStream)
+                    onNavigateBack()
+                }) {
+                    Text(stringResource(R.string.end_stream))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -187,7 +223,7 @@ fun MainStreamScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Groups,
-                    contentDescription = "Viewers"
+                    contentDescription = stringResource(R.string.viewers)
                 )
             }
         }
@@ -290,7 +326,7 @@ private fun ControlBar(
             ) { muted ->
                 Icon(
                     imageVector = if (muted) Icons.Filled.MicOff else Icons.Filled.Mic,
-                    contentDescription = if (muted) "Unmute microphone" else "Mute microphone"
+                    contentDescription = if (muted) stringResource(R.string.unmute_microphone) else stringResource(R.string.mute_microphone)
                 )
             }
         }
@@ -312,7 +348,7 @@ private fun ControlBar(
             ) { live ->
                 Icon(
                     imageVector = if (live) Icons.Filled.Stop else Icons.Filled.PlayArrow,
-                    contentDescription = if (live) "Stop stream" else "Start stream"
+                    contentDescription = if (live) stringResource(R.string.stop_stream) else stringResource(R.string.start_stream)
                 )
             }
         }
@@ -330,7 +366,7 @@ private fun ControlBar(
             ) { front ->
                 Icon(
                     imageVector = if (front) Icons.Filled.CameraRear else Icons.Filled.CameraFront,
-                    contentDescription = if (front) "Switch to back camera" else "Switch to front camera"
+                    contentDescription = if (front) stringResource(R.string.switch_to_back_camera) else stringResource(R.string.switch_to_front_camera)
                 )
             }
         }

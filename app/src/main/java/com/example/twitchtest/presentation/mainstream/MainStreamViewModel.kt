@@ -8,12 +8,14 @@ import com.example.twitchtest.domain.usecase.GetStreamKeyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -22,43 +24,34 @@ class MainStreamViewModel @Inject constructor(
     private val getStreamKeyUseCase: GetStreamKeyUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(MainStreamState())
-    val state: StateFlow<MainStreamState> = _state.asStateFlow()
+
+    val state: StateFlow<MainStreamState> = combine(
+        getStreamKeyUseCase(),
+        streamManager.streamStatus,
+        streamManager.streamDuration,
+        streamManager.isMuted,
+        streamManager.isFrontCamera
+    ) { key, status, duration, muted, front ->
+        MainStreamState(
+            streamKey = key.orEmpty(),
+            streamStatus = status,
+            duration = duration,
+            isMuted = muted,
+            isFrontCamera = front
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        MainStreamState()
+    )
 
     private val _effect = MutableSharedFlow<MainStreamEffect>()
     val effect: SharedFlow<MainStreamEffect> = _effect.asSharedFlow()
 
     init {
-        viewModelScope.launch {
-            getStreamKeyUseCase().collect { key ->
-                _state.update { it.copy(streamKey = key.orEmpty()) }
-            }
-        }
-        viewModelScope.launch {
-            streamManager.streamStatus.collect { status ->
-                _state.update { it.copy(streamStatus = status) }
-            }
-        }
-        viewModelScope.launch {
-            streamManager.streamDuration.collect { duration ->
-                _state.update { it.copy(duration = duration) }
-            }
-        }
-        viewModelScope.launch {
-            streamManager.isMuted.collect { muted ->
-                _state.update { it.copy(isMuted = muted) }
-            }
-        }
-        viewModelScope.launch {
-            streamManager.isFrontCamera.collect { front ->
-                _state.update { it.copy(isFrontCamera = front) }
-            }
-        }
-        viewModelScope.launch {
-            streamManager.errorMessage.collect { message ->
-                _effect.emit(MainStreamEffect.ShowError(message))
-            }
-        }
+        streamManager.errorMessage
+            .onEach { message -> _effect.emit(MainStreamEffect.ShowError(message)) }
+            .launchIn(viewModelScope)
     }
 
     fun getStreamManager(): StreamManager = streamManager
@@ -70,10 +63,11 @@ class MainStreamViewModel @Inject constructor(
             MainStreamIntent.ToggleMicrophone -> streamManager.toggleMicrophone()
             MainStreamIntent.SwitchCamera -> streamManager.switchCamera()
             MainStreamIntent.OpenViewerSheet -> {
-                if (_state.value.streamStatus == StreamStatus.ONLINE) {
+                if (state.value.streamStatus == StreamStatus.ONLINE) {
                     viewModelScope.launch { _effect.emit(MainStreamEffect.ShowViewerSheet) }
                 }
             }
+
             MainStreamIntent.CloseViewerSheet -> {
                 viewModelScope.launch { _effect.emit(MainStreamEffect.HideViewerSheet) }
             }
@@ -81,7 +75,7 @@ class MainStreamViewModel @Inject constructor(
     }
 
     private fun startStream() {
-        val key = _state.value.streamKey.trim()
+        val key = state.value.streamKey.trim()
         if (key.isBlank()) return
         val rtmpUrl = "rtmp://live.twitch.tv/app/$key"
         streamManager.startStream(rtmpUrl)

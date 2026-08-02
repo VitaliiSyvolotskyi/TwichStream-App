@@ -49,7 +49,9 @@ fun AppNavHost(navController: NavHostController) {
             )
         }
         composable<MainStreamRoute> {
-            MainStreamScreen()
+            MainStreamScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

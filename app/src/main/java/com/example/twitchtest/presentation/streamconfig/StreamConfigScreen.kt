@@ -18,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.twitchtest.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +44,7 @@ fun StreamConfigScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Stream Configuration") }
+                title = { Text(stringResource(R.string.stream_config_title)) }
             )
         }
     ) { innerPadding ->
@@ -64,7 +66,7 @@ fun StreamConfigScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Enter your Twitch stream key to start streaming.",
+                    text = stringResource(R.string.stream_config_description),
                     style = MaterialTheme.typography.bodyLarge
                 )
 
@@ -72,7 +74,7 @@ fun StreamConfigScreen(
                     value = state.streamKey,
                     onValueChange = { viewModel.onIntent(StreamConfigIntent.UpdateKey(it)) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Stream Key") },
+                    label = { Text(stringResource(R.string.stream_key_label)) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     supportingText = state.error?.let { error ->
@@ -84,7 +86,7 @@ fun StreamConfigScreen(
                     onClick = { viewModel.onIntent(StreamConfigIntent.SaveKey) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Save Key")
+                    Text(stringResource(R.string.save_key))
                 }
 
                 Button(
@@ -92,7 +94,7 @@ fun StreamConfigScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state.isSaved
                 ) {
-                    Text("Start Streaming")
+                    Text(stringResource(R.string.start_streaming))
                 }
             }
         }
