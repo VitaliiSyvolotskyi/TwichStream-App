@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,5 +26,11 @@ interface UserDao {
 
     @Query("DELETE FROM users")
     suspend fun clearAll()
+
+    @Transaction
+    suspend fun replaceAll(users: List<UserEntity>) {
+        clearAll()
+        insertAll(users)
+    }
 }
 

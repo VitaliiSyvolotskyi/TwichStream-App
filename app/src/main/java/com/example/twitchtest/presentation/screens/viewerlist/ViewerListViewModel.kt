@@ -1,4 +1,4 @@
-package com.example.twitchtest.presentation.viewerlist
+package com.example.twitchtest.presentation.screens.viewerlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,5 +1,6 @@
 package com.example.twitchtest.di
 
+import com.example.twitchtest.BuildConfig
 import com.example.twitchtest.data.remote.RandomUserApiService
 import dagger.Module
 import dagger.Provides
@@ -19,14 +20,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
-        OkHttpClient.Builder()
+    fun provideOkHttpClient(): OkHttpClient {
+        val loggingLevel = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor.Level.BODY
+        } else {
+            HttpLoggingInterceptor.Level.NONE
+        }
+        return OkHttpClient.Builder()
             .addInterceptor(
-                HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                }
+                HttpLoggingInterceptor().apply { level = loggingLevel }
             )
             .build()
+    }
 
     @Provides
     @Singleton

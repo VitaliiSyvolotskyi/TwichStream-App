@@ -1,12 +1,17 @@
-package com.example.twitchtest.presentation.viewerlist
+package com.example.twitchtest.presentation.screens.viewerlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -22,10 +27,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.twitchtest.R
 import com.example.twitchtest.domain.model.User
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +51,7 @@ fun ViewerListSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Viewers (${state.viewers.size})",
+                text = stringResource(R.string.viewers_count, state.viewers.size),
                 style = MaterialTheme.typography.headlineSmall
             )
 
@@ -52,27 +59,17 @@ fun ViewerListSheet(
                 value = state.searchQuery,
                 onValueChange = { viewModel.onIntent(ViewerListIntent.Search(it)) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Search viewers") },
+                label = { Text(stringResource(R.string.search_viewers)) },
                 singleLine = true
             )
 
             if (state.isLoading && state.viewers.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(state.viewers, key = { it.id }) { user ->
-                        ViewerItem(user = user)
-                    }
-                }
+                ViewerListLoading()
+            } else if (state.viewers.isNotEmpty()) {
+                ViewerList(
+                    viewers = state.viewers,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             state.error?.let { error ->
@@ -83,6 +80,32 @@ fun ViewerListSheet(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ViewerListLoading(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ViewerList(
+    viewers: List<User>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        items(viewers, key = { it.id }) { user ->
+            ViewerItem(user = user)
         }
     }
 }

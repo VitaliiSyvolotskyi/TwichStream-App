@@ -1,5 +1,9 @@
 package com.example.twitchtest.di
 
+import com.example.twitchtest.data.local.LocalUserDataSource
+import com.example.twitchtest.data.local.LocalUserDataSourceImpl
+import com.example.twitchtest.data.remote.RemoteUserDataSource
+import com.example.twitchtest.data.remote.RemoteUserDataSourceImpl
 import com.example.twitchtest.data.repository.StreamKeyRepositoryImpl
 import com.example.twitchtest.data.repository.UserRepositoryImpl
 import com.example.twitchtest.domain.repository.StreamKeyRepository
@@ -16,6 +20,18 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun bindRemoteUserDataSource(
+        impl: RemoteUserDataSourceImpl
+    ): RemoteUserDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindLocalUserDataSource(
+        impl: LocalUserDataSourceImpl
+    ): LocalUserDataSource
+
+    @Binds
+    @Singleton
     abstract fun bindUserRepository(
         impl: UserRepositoryImpl
     ): UserRepository
@@ -26,4 +42,3 @@ abstract class RepositoryModule {
         impl: StreamKeyRepositoryImpl
     ): StreamKeyRepository
 }
-

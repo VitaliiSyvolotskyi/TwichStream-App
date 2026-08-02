@@ -1,9 +1,8 @@
-package com.example.twitchtest.presentation.streamconfig
+package com.example.twitchtest.presentation.screens.streamconfig
 
 data class StreamConfigState(
     val streamKey: String = "",
     val isSaved: Boolean = false,
-    val isLoading: Boolean = true,
     val error: String? = null
 )
 

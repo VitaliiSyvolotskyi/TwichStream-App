@@ -1,15 +1,12 @@
 package com.example.twitchtest.data.streaming
 
-import android.net.Uri
 import android.util.Log
 import com.example.twitchtest.domain.model.StreamStatus
 import com.pedro.common.ConnectChecker
 import com.pedro.encoder.input.video.CameraOpenException
 import com.pedro.library.rtmp.RtmpCamera2
 import com.pedro.library.view.OpenGlView
-import java.net.InetAddress
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Duration.Companion.seconds
 
-@Singleton
 class StreamManager @Inject constructor() : ConnectChecker {
 
     private companion object {
@@ -52,16 +48,15 @@ class StreamManager @Inject constructor() : ConnectChecker {
     val errorMessage: SharedFlow<String> = _errorMessage.asSharedFlow()
 
     private var timerJob: Job? = null
-    private var scopeJob: Job = SupervisorJob()
-    private var scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + scopeJob)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 
     /** The last RTMP URL used, so we can auto-reconnect after surface recreation. */
     private var lastRtmpUrl: String? = null
+
     /** Whether the user intends to be streaming (survives surface destroy/create). */
     private var streamingIntended = false
 
     fun initialize(openGlView: OpenGlView) {
-        ensureScope()
         currentOpenGlView = openGlView
         val currentCamera = rtmpCamera2
         if (currentCamera == null) {
@@ -118,14 +113,16 @@ class StreamManager @Inject constructor() : ConnectChecker {
                 _streamStatus.value = StreamStatus.OFFLINE
                 streamingIntended = false
                 scope.launch {
-                    _errorMessage.emit("Failed to re-prepare camera after returning from background.")
+                    _errorMessage.emit(
+                        "Failed to re-prepare camera after returning from background."
+                    )
                 }
             }
         }
     }
 
     fun startStream(rtmpUrl: String) {
-        logRtmpDebugInfo(rtmpUrl)
+        Log.i(TAG, "startStream called")
 
         val camera = rtmpCamera2 ?: return
         if (camera.isStreaming) return
@@ -179,6 +176,10 @@ class StreamManager @Inject constructor() : ConnectChecker {
 
     fun isStreaming(): Boolean = rtmpCamera2?.isStreaming == true
 
+    /**
+     * Stops the active stream and preview, cancels the internal scope.
+     * After calling this the instance must not be reused.
+     */
     fun release() {
         streamingIntended = false
         lastRtmpUrl = null
@@ -186,11 +187,7 @@ class StreamManager @Inject constructor() : ConnectChecker {
         stopPreview()
         rtmpCamera2 = null
         currentOpenGlView = null
-        _isMuted.value = false
-        _isFrontCamera.value = true
-        stopTimer()
         scope.cancel()
-        recreateScope()
     }
 
     override fun onConnectionStarted(url: String) {
@@ -232,7 +229,6 @@ class StreamManager @Inject constructor() : ConnectChecker {
     override fun onNewBitrate(bitrate: Long) = Unit
 
     private fun startTimer() {
-        ensureScope()
         _streamDuration.value = 0L
         timerJob?.cancel()
         timerJob = scope.launch {
@@ -250,51 +246,4 @@ class StreamManager @Inject constructor() : ConnectChecker {
         timerJob = null
         _streamDuration.value = 0L
     }
-
-    private fun ensureScope() {
-        if (!scopeJob.isActive) {
-            recreateScope()
-        }
-    }
-
-    private fun recreateScope() {
-        scopeJob = SupervisorJob()
-        scope = CoroutineScope(Dispatchers.Main.immediate + scopeJob)
-    }
-
-    // Temporary diagnostics to debug endpoint and DNS issues in stream setup.
-    private fun logRtmpDebugInfo(rtmpUrl: String) {
-        Log.i(TAG, "RTMP final url: $rtmpUrl")
-
-        val parsed = runCatching { Uri.parse(rtmpUrl) }.getOrNull()
-        if (parsed == null) {
-            Log.e(TAG, "RTMP parse failed: Uri.parse returned null")
-            return
-        }
-
-        val host = parsed.host.orEmpty()
-        val resolvedPort = if (parsed.port != -1) parsed.port else 1935
-        Log.i(
-            TAG,
-            "RTMP parsed -> scheme=${parsed.scheme}, host=$host, port=$resolvedPort, path=${parsed.path}"
-        )
-
-        if (host.isBlank()) {
-            Log.e(TAG, "RTMP parsed host is blank")
-            return
-        }
-
-        scope.launch(Dispatchers.IO) {
-            runCatching {
-                InetAddress.getAllByName(host)
-            }.onSuccess { addresses ->
-                val resolved = addresses.joinToString { it.hostAddress ?: "unknown" }
-                Log.i(TAG, "RTMP host resolved -> $resolved")
-            }.onFailure { throwable ->
-                Log.e(TAG, "RTMP host resolve failed: ${throwable.message}", throwable)
-            }
-        }
-    }
 }
-
-

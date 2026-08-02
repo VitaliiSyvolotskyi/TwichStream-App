@@ -1,4 +1,4 @@
-package com.example.twitchtest.presentation.viewerlist
+package com.example.twitchtest.presentation.screens.viewerlist
 
 import com.example.twitchtest.domain.model.User
 

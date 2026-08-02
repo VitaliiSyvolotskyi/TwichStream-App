@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.twitchtest.presentation.mainstream.MainStreamScreen
-import com.example.twitchtest.presentation.streamconfig.StreamConfigScreen
+import com.example.twitchtest.presentation.screens.mainstream.MainStreamScreen
+import com.example.twitchtest.presentation.screens.streamconfig.StreamConfigScreen
 
 private const val ANIM_DURATION = 400
 

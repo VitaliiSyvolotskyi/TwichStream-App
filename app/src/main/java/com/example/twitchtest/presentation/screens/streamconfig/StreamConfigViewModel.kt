@@ -1,4 +1,4 @@
-package com.example.twitchtest.presentation.streamconfig
+package com.example.twitchtest.presentation.screens.streamconfig
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,7 +34,6 @@ class StreamConfigViewModel @Inject constructor(
                     it.copy(
                         streamKey = key.orEmpty(),
                         isSaved = !key.isNullOrBlank(),
-                        isLoading = false,
                         error = null
                     )
                 }

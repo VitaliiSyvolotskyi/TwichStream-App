@@ -6,6 +6,8 @@
     <string name="stream_config_description">Enter your Twitch stream key to start streaming.</string>
     <string name="stream_key_label">Stream Key</string>
     <string name="save_key">Save Key</string>
+    <string name="show_key">Show stream key</string>
+    <string name="hide_key">Hide stream key</string>
     <string name="start_streaming">Start Streaming</string>
 
     <!-- Main Stream Screen -->
@@ -21,4 +23,8 @@
     <string name="start_stream">Start stream</string>
     <string name="switch_to_back_camera">Switch to back camera</string>
     <string name="switch_to_front_camera">Switch to front camera</string>
+
+    <!-- Viewer List Sheet -->
+    <string name="viewers_count">Viewers (%1$d)</string>
+    <string name="search_viewers">Search viewers</string>
 </resources>

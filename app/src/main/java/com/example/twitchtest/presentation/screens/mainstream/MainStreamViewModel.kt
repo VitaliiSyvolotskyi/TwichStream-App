@@ -1,4 +1,4 @@
-package com.example.twitchtest.presentation.mainstream
+package com.example.twitchtest.presentation.screens.mainstream
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,9 +21,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class MainStreamViewModel @Inject constructor(
     private val streamManager: StreamManager,
-    private val getStreamKeyUseCase: GetStreamKeyUseCase
+    getStreamKeyUseCase: GetStreamKeyUseCase
 ) : ViewModel() {
-
 
     val state: StateFlow<MainStreamState> = combine(
         getStreamKeyUseCase(),
@@ -54,10 +53,13 @@ class MainStreamViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun getStreamManager(): StreamManager = streamManager
-
     fun onIntent(intent: MainStreamIntent) {
         when (intent) {
+            is MainStreamIntent.InitializeStream -> streamManager.initialize(intent.openGlView)
+            MainStreamIntent.StartPreview -> streamManager.startPreview()
+            MainStreamIntent.StopPreview -> streamManager.stopPreview()
+            is MainStreamIntent.SurfaceRecreated ->
+                streamManager.onSurfaceRecreated(intent.openGlView)
             MainStreamIntent.StartStream -> startStream()
             MainStreamIntent.StopStream -> streamManager.stopStream()
             MainStreamIntent.ToggleMicrophone -> streamManager.toggleMicrophone()
@@ -67,7 +69,6 @@ class MainStreamViewModel @Inject constructor(
                     viewModelScope.launch { _effect.emit(MainStreamEffect.ShowViewerSheet) }
                 }
             }
-
             MainStreamIntent.CloseViewerSheet -> {
                 viewModelScope.launch { _effect.emit(MainStreamEffect.HideViewerSheet) }
             }
@@ -86,4 +87,3 @@ class MainStreamViewModel @Inject constructor(
         streamManager.release()
     }
 }
-
