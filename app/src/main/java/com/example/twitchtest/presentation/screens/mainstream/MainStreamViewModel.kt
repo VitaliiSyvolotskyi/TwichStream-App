@@ -60,6 +60,7 @@ class MainStreamViewModel @Inject constructor(
             MainStreamIntent.StopPreview -> streamManager.stopPreview()
             is MainStreamIntent.SurfaceRecreated ->
                 streamManager.onSurfaceRecreated(intent.openGlView)
+
             MainStreamIntent.StartStream -> startStream()
             MainStreamIntent.StopStream -> streamManager.stopStream()
             MainStreamIntent.ToggleMicrophone -> streamManager.toggleMicrophone()
@@ -69,6 +70,7 @@ class MainStreamViewModel @Inject constructor(
                     viewModelScope.launch { _effect.emit(MainStreamEffect.ShowViewerSheet) }
                 }
             }
+
             MainStreamIntent.CloseViewerSheet -> {
                 viewModelScope.launch { _effect.emit(MainStreamEffect.HideViewerSheet) }
             }
@@ -78,12 +80,15 @@ class MainStreamViewModel @Inject constructor(
     private fun startStream() {
         val key = state.value.streamKey.trim()
         if (key.isBlank()) return
-        val rtmpUrl = "rtmp://live.twitch.tv/app/$key"
+        val rtmpUrl = "$TWITCH_RTMP_BASE_URL$key"
         streamManager.startStream(rtmpUrl)
     }
 
     override fun onCleared() {
-        super.onCleared()
         streamManager.release()
+    }
+
+    private companion object {
+        const val TWITCH_RTMP_BASE_URL = "rtmp://live.twitch.tv/app/"
     }
 }
