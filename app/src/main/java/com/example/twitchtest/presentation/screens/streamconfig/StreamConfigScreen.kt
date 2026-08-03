@@ -21,14 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.twitchtest.R
 import com.example.twitchtest.presentation.screens.streamconfig.StreamConfigIntent.NavigateToStream
@@ -82,7 +82,7 @@ private fun StreamConfigContent(
             style = MaterialTheme.typography.bodyLarge
         )
 
-        var keyVisible by remember { mutableStateOf(false) }
+        var keyVisible by rememberSaveable { mutableStateOf(false) }
 
         OutlinedTextField(
             value = state.streamKey,
