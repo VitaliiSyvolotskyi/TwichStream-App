@@ -26,11 +26,13 @@ import com.example.twitchtest.presentation.screens.mainstream.content.utils.toCo
 fun StatusInfoPanel(
     status: StreamStatus,
     duration: Long,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
+        onClick = { onClick?.invoke() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
         )

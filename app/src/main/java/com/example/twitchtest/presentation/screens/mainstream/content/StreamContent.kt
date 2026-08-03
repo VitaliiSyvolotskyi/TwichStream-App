@@ -20,7 +20,6 @@ import com.example.twitchtest.presentation.screens.mainstream.MainStreamIntent
 import com.example.twitchtest.presentation.screens.mainstream.MainStreamState
 import com.example.twitchtest.presentation.screens.mainstream.content.components.ControlBar
 import com.example.twitchtest.presentation.screens.mainstream.content.components.StatusInfoPanel
-import com.example.twitchtest.presentation.screens.mainstream.content.components.ViewerButton
 import com.example.twitchtest.presentation.screens.viewerlist.ViewerListSheet
 import com.pedro.library.view.OpenGlView
 
@@ -40,18 +39,16 @@ fun StreamContent(
         StatusInfoPanel(
             status = state.streamStatus,
             duration = state.duration,
+            onClick = if (state.streamStatus == StreamStatus.ONLINE) {
+                { onIntent(MainStreamIntent.OpenViewerSheet) }
+            } else {
+                null
+            },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = statusBarPadding + 12.dp)
         )
 
-        ViewerButton(
-            visible = state.streamStatus == StreamStatus.ONLINE,
-            onClick = { onIntent(MainStreamIntent.OpenViewerSheet) },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = statusBarPadding + 8.dp, end = 16.dp)
-        )
 
         ControlBar(
             isStreaming = state.isStreaming,
