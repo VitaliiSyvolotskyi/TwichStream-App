@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.URI
 
 @HiltViewModel
 class StreamConfigViewModel @Inject constructor(
@@ -60,16 +61,21 @@ class StreamConfigViewModel @Inject constructor(
 
     private fun saveKey() {
         viewModelScope.launch {
-            val key = _state.value.streamKey.trim()
-            if (key.isBlank()) {
-                _state.update { it.copy(error = "Stream key cannot be empty") }
+            val streamUrl = _state.value.streamKey.trim()
+            if (streamUrl.isBlank()) {
+                _state.update { it.copy(error = "Stream URL cannot be empty") }
                 return@launch
             }
 
-            saveStreamKeyUseCase(key)
+            if (!isValidStreamUrl(streamUrl)) {
+                _state.update { it.copy(error = "Please enter a valid stream URL") }
+                return@launch
+            }
+
+            saveStreamKeyUseCase(streamUrl)
             _state.update {
                 it.copy(
-                    streamKey = key,
+                    streamKey = streamUrl,
                     isSaved = true,
                     error = null
                 )
@@ -80,11 +86,16 @@ class StreamConfigViewModel @Inject constructor(
     private fun navigateToStream() {
         viewModelScope.launch {
             if (!_state.value.isSaved) {
-                _state.update { it.copy(error = "Please save a stream key first") }
+                _state.update { it.copy(error = "Please save a stream URL first") }
                 return@launch
             }
             _effect.emit(StreamConfigEffect.NavigateToMainStream)
         }
+    }
+
+    private fun isValidStreamUrl(value: String): Boolean {
+        val uri = runCatching { URI(value) }.getOrNull() ?: return false
+        return !uri.scheme.isNullOrBlank() && !uri.schemeSpecificPart.isNullOrBlank()
     }
 }
 

@@ -217,7 +217,7 @@ class StreamManagerImpl @Inject constructor() : StreamManager, ConnectChecker {
         _streamStatus.value = StreamStatus.OFFLINE
         stopTimer()
         scope.launch {
-            _errorMessage.emit("Authentication failed. Check your stream key.")
+            _errorMessage.emit("Authentication failed. Check your stream URL and credentials.")
         }
     }
 

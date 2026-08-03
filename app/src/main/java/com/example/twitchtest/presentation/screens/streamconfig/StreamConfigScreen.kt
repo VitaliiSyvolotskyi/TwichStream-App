@@ -5,13 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -19,14 +14,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +28,7 @@ import com.example.twitchtest.presentation.screens.streamconfig.StreamConfigInte
 fun StreamConfigScreen(
     onNavigateToStream: () -> Unit,
     viewModel: StreamConfigViewModel = hiltViewModel()
-) {
+    ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
 
     LaunchedEffect(viewModel) {
@@ -82,35 +71,13 @@ private fun StreamConfigContent(
             style = MaterialTheme.typography.bodyLarge
         )
 
-        var keyVisible by rememberSaveable { mutableStateOf(false) }
-
         OutlinedTextField(
             value = state.streamKey,
             onValueChange = { onIntent(StreamConfigIntent.UpdateKey(it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.stream_key_label)) },
-            visualTransformation = if (keyVisible) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
+            label = { Text(stringResource(R.string.stream_url_label)) },
+            placeholder = { Text(stringResource(R.string.stream_url_placeholder)) },
             singleLine = true,
-            trailingIcon = {
-                IconButton(onClick = { keyVisible = !keyVisible }) {
-                    Icon(
-                        imageVector = if (keyVisible) {
-                            Icons.Filled.VisibilityOff
-                        } else {
-                            Icons.Filled.Visibility
-                        },
-                        contentDescription = if (keyVisible) {
-                            stringResource(R.string.hide_key)
-                        } else {
-                            stringResource(R.string.show_key)
-                        }
-                    )
-                }
-            },
             supportingText = state.error?.let { error ->
                 { Text(text = error, color = MaterialTheme.colorScheme.error) }
             }
@@ -120,7 +87,7 @@ private fun StreamConfigContent(
             onClick = { onIntent(SaveKey) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(stringResource(R.string.save_key))
+            Text(stringResource(R.string.save_url))
         }
 
         Button(

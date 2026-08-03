@@ -3,11 +3,10 @@
 
     <!-- Stream Config Screen -->
     <string name="stream_config_title">Stream Configuration</string>
-    <string name="stream_config_description">Enter your Twitch stream key to start streaming.</string>
-    <string name="stream_key_label">Stream Key</string>
-    <string name="save_key">Save Key</string>
-    <string name="show_key">Show stream key</string>
-    <string name="hide_key">Hide stream key</string>
+    <string name="stream_config_description">Enter your stream URL to start streaming.</string>
+    <string name="stream_url_label">Stream URL</string>
+    <string name="stream_url_placeholder">rtmp://example.com/live/stream</string>
+    <string name="save_url">Save URL</string>
     <string name="start_streaming">Start Streaming</string>
 
     <!-- Main Stream Screen -->
