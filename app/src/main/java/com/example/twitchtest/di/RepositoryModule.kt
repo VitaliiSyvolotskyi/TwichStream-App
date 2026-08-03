@@ -6,8 +6,6 @@ import com.example.twitchtest.data.remote.RemoteUserDataSource
 import com.example.twitchtest.data.remote.RemoteUserDataSourceImpl
 import com.example.twitchtest.data.repository.StreamKeyRepositoryImpl
 import com.example.twitchtest.data.repository.UserRepositoryImpl
-import com.example.twitchtest.data.streaming.StreamManager
-import com.example.twitchtest.data.streaming.StreamManagerImpl
 import com.example.twitchtest.domain.repository.StreamKeyRepository
 import com.example.twitchtest.domain.repository.UserRepository
 import dagger.Binds
@@ -43,10 +41,4 @@ abstract class RepositoryModule {
     abstract fun bindStreamKeyRepository(
         impl: StreamKeyRepositoryImpl
     ): StreamKeyRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindStreamManager(
-        impl: StreamManagerImpl
-    ): StreamManager
 }

@@ -14,7 +14,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +29,7 @@ private enum class PermissionState { PENDING, GRANTED, DENIED }
 fun RequireStreamingPermissions(
     content: @Composable () -> Unit
 ) {
-    var state by rememberSaveable { mutableStateOf(PermissionState.PENDING) }
+    var state by remember { mutableStateOf(PermissionState.PENDING) }
 
     when (state) {
         PermissionState.PENDING -> {
@@ -69,7 +68,7 @@ fun RequestStreamingPermissions(
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        if (results.isNotEmpty() && results.values.all { it }) {
+        if (results.values.all { it }) {
             onAllGranted()
         } else {
             onDenied()

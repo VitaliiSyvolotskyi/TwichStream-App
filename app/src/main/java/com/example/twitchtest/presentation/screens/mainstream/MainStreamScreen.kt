@@ -13,11 +13,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.twitchtest.R
 import com.example.twitchtest.domain.model.StreamStatus
@@ -46,8 +45,8 @@ private fun MainStreamContent(
     val context = LocalContext.current
     val activity = context as? Activity
     val snackbarHostState = remember { SnackbarHostState() }
-    var showViewerSheet by rememberSaveable { mutableStateOf(false) }
-    var showExitDialog by rememberSaveable { mutableStateOf(false) }
+    var showViewerSheet by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     BackHandler(enabled = state.isStreaming) {
         showExitDialog = true
